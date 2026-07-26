@@ -1,0 +1,13 @@
+{
+  "name": "recipe-app",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Recipes PWA — React/Vite client + Express TheMealDB proxy",
+  "scripts": {
+    "dev": "npm run dev --prefix server & npm run dev --prefix client & wait",
+    "dev:server": "npm run dev --prefix server",
+    "dev:client": "npm run dev --prefix client",
+    "build": "npm run build --prefix server && npm run build --prefix client",
+    "start": "npm run start --prefix server"
+  }
+}

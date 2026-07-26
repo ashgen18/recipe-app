@@ -1,0 +1,91 @@
+import { useState, type FormEvent } from "react";
+import { Link, NavLink, useNavigate } from "react-router-dom";
+import { Heart, Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { cn } from "@/lib/utils";
+
+export function Header() {
+  const navigate = useNavigate();
+  const [q, setQ] = useState("");
+
+  function onSearch(e: FormEvent) {
+    e.preventDefault();
+    const trimmed = q.trim();
+    if (!trimmed) return;
+    navigate(`/?q=${encodeURIComponent(trimmed)}`);
+  }
+
+  const navClass = ({ isActive }: { isActive: boolean }) =>
+    cn(
+      "rounded-md px-3 py-2 text-sm font-medium transition-colors",
+      isActive
+        ? "bg-primary text-primary-foreground"
+        : "text-foreground/80 hover:bg-secondary"
+    );
+
+  return (
+    <header className="sticky top-0 z-40 border-b bg-background/85 backdrop-blur-md">
+      <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:gap-4">
+        <div className="flex items-center justify-between gap-3">
+          <Link
+            to="/"
+            className="font-display text-2xl font-bold tracking-tight text-primary"
+          >
+            Recipes
+          </Link>
+          <nav aria-label="Primary" className="flex items-center gap-1 sm:hidden">
+            <NavLink to="/" className={navClass} end>
+              Browse
+            </NavLink>
+            <NavLink to="/favorites" className={navClass}>
+              Favorites
+            </NavLink>
+            <ThemeToggle />
+          </nav>
+        </div>
+
+        <form
+          onSubmit={onSearch}
+          role="search"
+          className="flex flex-1 items-center gap-2"
+          aria-label="Search recipes"
+        >
+          <label htmlFor="recipe-search" className="sr-only">
+            Search recipes by name
+          </label>
+          <div className="relative w-full">
+            <Search
+              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+              aria-hidden="true"
+            />
+            <Input
+              id="recipe-search"
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Search recipes…"
+              className="pl-9"
+              autoComplete="off"
+            />
+          </div>
+          <Button type="submit">Search</Button>
+        </form>
+
+        <nav
+          aria-label="Primary"
+          className="hidden items-center gap-1 sm:flex"
+        >
+          <NavLink to="/" className={navClass} end>
+            Browse
+          </NavLink>
+          <NavLink to="/favorites" className={navClass}>
+            <Heart className="mr-1 h-4 w-4" aria-hidden="true" />
+            Favorites
+          </NavLink>
+          <ThemeToggle />
+        </nav>
+      </div>
+    </header>
+  );
+}
