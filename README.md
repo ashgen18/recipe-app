@@ -156,21 +156,46 @@ To change strategies, edit `client/src/sw.js` (and sync to `public/sw.js`), then
 3. Chrome DevTools → Application → Service Workers → confirm registration.
 4. Network → Offline → open `/favorites`, toggle favorites, revisit cached meal URLs.
 
-## Build & deploy suggestions
+## Deploy (live public URL)
+
+### Recommended: one Render service (UI + API together)
+
+This repo includes `render.yaml`. Production Express serves `client/dist`, so you get **one shareable URL**.
+
+1. Push/merge this branch (or deploy from `cursor/recipes-pwa-6a65`).
+2. Go to [Render Dashboard](https://dashboard.render.com/) → **New** → **Blueprint**.
+3. Connect the `ashgen18/recipe-app` GitHub repo.
+4. Apply the Blueprint (`recipe-app` web service, free plan).
+5. Wait for the first deploy, then open the service URL  
+   (example shape: `https://recipe-app-xxxx.onrender.com`).
+
+Env vars set by the Blueprint:
+
+| Variable | Value |
+| --- | --- |
+| `NODE_ENV` | `production` |
+| `MEALDB_API_BASE` | `https://www.themealdb.com/api/json/v1` |
+| `MEALDB_API_KEY` | `1` (dev key) |
+
+Notes:
+- Free Render services **sleep after idle**; the first request may take ~30–60s.
+- Local favorites (IndexedDB) are per-browser; they do not sync across devices.
+
+### Optional: split hosting
+
+- **API on Render**, **client on Vercel/Netlify**
+  - Client env: `VITE_API_BASE=https://YOUR-SERVICE.onrender.com/api`
+  - Server env: `CORS_ORIGINS=https://your-client.vercel.app`
+  - Config stubs: `client/vercel.json`, `netlify.toml`
+
+### Local production smoke test
 
 ```bash
-# Server
-cd server && npm i && npm run build && npm start
-
-# Client
-cd client && npm i && npm run build
-# deploy client/dist
+npm run install:all
+npm run build
+NODE_ENV=production npm start
+# open http://localhost:5174
 ```
-
-- **Server**: [Render](https://render.com/) / Railway / Fly.io — set `MEALDB_API_KEY`, `MEALDB_API_BASE`, `PORT`
-- **Client**: Netlify / Vercel — set SPA rewrite to `index.html`; point API calls to your deployed proxy (replace Vite dev proxy with an absolute API base if hosting separately)
-
-If client and server are on different origins, set CORS on the server to your client origin and introduce e.g. `VITE_API_BASE` in `src/lib/api.ts`.
 
 ## Security
 
@@ -183,7 +208,8 @@ If client and server are on different origins, set CORS on the server to your cl
 - [ ] `cd server && cp .env.example .env && npm i && npm run dev`
 - [ ] `cd client && npm i && npm run dev`
 - [ ] Confirm search, categories, detail, favorites
+- [ ] Deploy via Render Blueprint for a public URL
 - [ ] Replace placeholder icons in `client/public/icons/` with branded assets
 - [ ] Optionally add more shadcn components via CLI
 - [ ] Bump SW `CACHE_VERSION` after deploy asset changes
-- [ ] Tighten CORS `origin` for production
+- [ ] Tighten `CORS_ORIGINS` if you split client/server hosts

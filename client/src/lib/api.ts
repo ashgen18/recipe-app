@@ -1,9 +1,11 @@
 /**
  * Client API layer — talks only to our Express proxy under /api/*.
  * TheMealDB API key never reaches the browser.
+ *
+ * Same-origin deploy (Render single service): leave VITE_API_BASE unset → "/api".
+ * Split deploy (Vercel client + Render API): set VITE_API_BASE=https://your-api.onrender.com/api
  */
-
-const API_BASE = "/api";
+const API_BASE = (import.meta.env.VITE_API_BASE ?? "/api").replace(/\/$/, "");
 
 async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`, {

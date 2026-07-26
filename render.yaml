@@ -1,0 +1,22 @@
+# Render Blueprint — one public URL serves the PWA + /api proxy
+# Dashboard: https://dashboard.render.com → New → Blueprint → connect this repo
+services:
+  - type: web
+    name: recipe-app
+    runtime: node
+    plan: free
+    region: oregon
+    branch: cursor/recipes-pwa-6a65
+    buildCommand: npm run install:all && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MEALDB_API_BASE
+        value: https://www.themealdb.com/api/json/v1
+      - key: MEALDB_API_KEY
+        value: "1"
+      # Optional: set if you later split the client to another domain
+      - key: CORS_ORIGINS
+        sync: false
