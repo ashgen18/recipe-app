@@ -1,0 +1,11 @@
+# Optional Netlify client-only deploy.
+# Set env VITE_API_BASE=https://YOUR-SERVICE.onrender.com/api
+[build]
+  base = "client"
+  command = "npm run build"
+  publish = "dist"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
