@@ -7,12 +7,36 @@ import {
   getCategories,
   getRandomMeal,
   searchMeals,
+  type Category,
   type MealSummary,
 } from "@/lib/api";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { RecipeCard, RecipeCardSkeleton } from "@/components/RecipeCard";
 import { Skeleton } from "@/components/ui/skeleton";
+
+const LANDING_CATEGORIES = ["Vegetarian", "Vegan"] as const;
+
+function mergeMeals(...lists: (MealSummary[] | null | undefined)[]): MealSummary[] {
+  const merged: MealSummary[] = [];
+  for (const list of lists) {
+    for (const meal of list ?? []) {
+      if (!merged.some((x) => x.idMeal === meal.idMeal)) {
+        merged.push(meal);
+      }
+    }
+  }
+  return merged;
+}
+
+function prioritizePlantBased(categories: Category[]): Category[] {
+  const preferred = new Set<string>(LANDING_CATEGORIES);
+  const featured = LANDING_CATEGORIES.map((name) =>
+    categories.find((c) => c.strCategory === name)
+  ).filter((c): c is Category => Boolean(c));
+  const rest = categories.filter((c) => !preferred.has(c.strCategory));
+  return [...featured, ...rest];
+}
 
 export function Home() {
   const [params, setParams] = useSearchParams();
@@ -24,24 +48,21 @@ export function Home() {
     queryFn: getCategories,
   });
 
+  const orderedCategories = useMemo(
+    () => prioritizePlantBased(categoriesQuery.data?.categories ?? []),
+    [categoriesQuery.data]
+  );
+
   const mealsQuery = useQuery({
     queryKey: ["meals", { query, category }],
     queryFn: async () => {
       if (query) return searchMeals(query);
       if (category) return filterByCategory(category);
-      // Default browse: random inspiration + Beef category as a filled grid
-      const [random, beef] = await Promise.all([
-        getRandomMeal(),
-        filterByCategory("Beef"),
-      ]);
-      const randomMeal = random.meals?.[0];
-      const list = beef.meals ?? [];
-      const merged: MealSummary[] = [];
-      if (randomMeal) merged.push(randomMeal);
-      for (const m of list) {
-        if (!merged.some((x) => x.idMeal === m.idMeal)) merged.push(m);
-      }
-      return { meals: merged };
+      // Default landing: Vegetarian + Vegan recipes
+      const [vegetarian, vegan] = await Promise.all(
+        LANDING_CATEGORIES.map((name) => filterByCategory(name))
+      );
+      return { meals: mergeMeals(vegetarian.meals, vegan.meals) };
     },
   });
 
@@ -82,11 +103,12 @@ export function Home() {
                 ? `Results for “${query}”`
                 : category
                   ? category
-                  : "Discover recipes"}
+                  : "Vegetarian & Vegan"}
             </h1>
             <p className="mt-1 max-w-2xl text-muted-foreground">
-              Search by name or browse categories. Favorites sync to this device
-              and work offline.
+              {query || category
+                ? "Search by name or browse categories. Favorites sync to this device and work offline."
+                : "Plant-based recipes to start with — pick Vegetarian or Vegan, or browse every category."}
             </p>
           </div>
           <Button type="button" variant="secondary" onClick={surpriseMe}>
@@ -116,10 +138,10 @@ export function Home() {
             className="rounded-md focus-visible:outline-none"
           >
             <Badge variant={!query && !category ? "default" : "outline"}>
-              All
+              Vegetarian & Vegan
             </Badge>
           </button>
-          {(categoriesQuery.data?.categories ?? []).map((cat) => (
+          {orderedCategories.map((cat) => (
             <button
               key={cat.idCategory}
               type="button"

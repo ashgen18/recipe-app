@@ -4,6 +4,7 @@ Browse recipes from [TheMealDB](https://www.themealdb.com/) with a React + Vite 
 
 ## Features
 
+- Landing page highlights **Vegetarian** and **Vegan** recipes from TheMealDB
 - Search meals by name and browse categories
 - Recipe detail view (ingredients, instructions, tags, YouTube)
 - Favorite / unfavorite with **IndexedDB** persistence (works offline)
