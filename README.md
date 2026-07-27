@@ -138,7 +138,9 @@ Ensure `components.json` aliases `@/` → `./src` (already configured in `vite.c
 - **Manifest**: `client/public/manifest.webmanifest` (standalone, theme `#1f4d3a`, icons)
 - **Service worker**: `client/src/sw.js` (copied to `client/public/sw.js` for serving)
 - **Offline page**: `client/public/offline.html`
-- **Favorites**: IndexedDB via `idb` in `src/features/favorites/db.ts`
+- **Favorites**: IndexedDB via `idb` in `src/features/favorites/db.ts` (full `MealDetail` + `savedAt`)
+- **Category snapshots**: same DB, `categorySnapshots` store — browsed / favorited category meal lists for offline Home
+- **Offline warm-cache**: `src/lib/offlineCache.ts` puts meal JSON + images into Cache Storage when you favorite (and while browsing)
 
 ### Caching strategies (service worker)
 
@@ -148,15 +150,16 @@ Ensure `components.json` aliases `@/` → `./src` (already configured in `vite.c
 | Images + `/api/categories` | Stale-While-Revalidate |
 | `/api/meal/*`, `/api/search`, `/api/filter` | Network-First → cache fallback |
 | Navigations | Network → cached page → `/offline.html` |
+| Client message `CACHE_URLS` | SW fetches and stores URLs in the runtime cache |
 
-To change strategies, edit `client/src/sw.js` (and sync to `public/sw.js`), then bump `CACHE_VERSION`.
+To change strategies, edit `client/src/sw.js` (and sync to `public/sw.js`), then bump `CACHE_VERSION` (also update `RUNTIME_CACHE` in `offlineCache.ts`).
 
 ### Offline testing
 
-1. Run server + client, browse a few recipes, favorite at least one (opens detail so full data is stored).
-2. `npm run build` in `client`, then `npm run preview`.
-3. Chrome DevTools → Application → Service Workers → confirm registration.
-4. Network → Offline → open `/favorites`, toggle favorites, revisit cached meal URLs.
+1. Run server + client, browse categories, favorite at least one recipe (full detail + image + loaded category thumbs are cached).
+2. `npm run build` in `client`, then `npm run preview` (or `VITE_ENABLE_SW=true npm run dev`).
+3. Chrome DevTools → Application → Service Workers / Cache Storage / IndexedDB → confirm registration and entries.
+4. Network → Offline → open `/favorites`, open a favorited meal’s detail (instructions + image), and revisit a previously loaded category on Home.
 
 ## Deploy (live public URL)
 
