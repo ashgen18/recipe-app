@@ -9,7 +9,7 @@
  * - Navigation: network, then cache, then /offline.html
  */
 
-const CACHE_VERSION = "recipes-pwa-v1";
+const CACHE_VERSION = "recipes-pwa-v2";
 const PRECACHE = `${CACHE_VERSION}-precache`;
 const RUNTIME = `${CACHE_VERSION}-runtime`;
 
@@ -18,7 +18,11 @@ const PRECACHE_URLS = [
   "/index.html",
   "/offline.html",
   "/manifest.webmanifest",
+  "/favicon.ico",
+  "/favicon.svg",
   "/icons/icon.svg",
+  "/icons/favicon-16.png",
+  "/icons/favicon-32.png",
   "/icons/icon-192.png",
   "/icons/icon-512.png",
 ];
