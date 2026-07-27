@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
@@ -10,6 +10,11 @@ import {
   type Category,
   type MealSummary,
 } from "@/lib/api";
+import {
+  getAllCategorySnapshots,
+  getCategorySnapshot,
+} from "@/features/favorites/db";
+import { warmMealListOffline } from "@/lib/offlineCache";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { RecipeCard, RecipeCardSkeleton } from "@/components/RecipeCard";
@@ -56,17 +61,52 @@ export function Home() {
   const mealsQuery = useQuery({
     queryKey: ["meals", { query, category }],
     queryFn: async () => {
-      if (query) return searchMeals(query);
-      if (category) return filterByCategory(category);
-      // Default landing: Vegetarian + Vegan recipes
-      const [vegetarian, vegan] = await Promise.all(
-        LANDING_CATEGORIES.map((name) => filterByCategory(name))
-      );
-      return { meals: mergeMeals(vegetarian.meals, vegan.meals) };
+      try {
+        if (query) return searchMeals(query);
+        if (category) {
+          const data = await filterByCategory(category);
+          void warmMealListOffline(category, data.meals ?? []);
+          return data;
+        }
+        // Default landing: Vegetarian + Vegan recipes
+        const [vegetarian, vegan] = await Promise.all(
+          LANDING_CATEGORIES.map((name) => filterByCategory(name))
+        );
+        void warmMealListOffline("Vegetarian", vegetarian.meals ?? []);
+        void warmMealListOffline("Vegan", vegan.meals ?? []);
+        return { meals: mergeMeals(vegetarian.meals, vegan.meals) };
+      } catch (err) {
+        // Offline: serve category snapshots saved while browsing / favoriting
+        if (query) throw err;
+        if (category) {
+          const snap = await getCategorySnapshot(category);
+          if (snap?.meals?.length) return { meals: snap.meals };
+          throw err;
+        }
+        const snaps = await getAllCategorySnapshots();
+        const plant = LANDING_CATEGORIES.flatMap(
+          (name) => snaps.find((s) => s.category === name)?.meals ?? []
+        );
+        if (plant.length) return { meals: mergeMeals(plant) };
+        const any = snaps.flatMap((s) => s.meals);
+        if (any.length) return { meals: mergeMeals(any) };
+        throw err;
+      }
     },
   });
 
   const meals = useMemo(() => mealsQuery.data?.meals ?? [], [mealsQuery.data]);
+
+  // Remember loaded lists + warm-cache thumbs for offline favorites / browse
+  useEffect(() => {
+    if (!mealsQuery.isSuccess || meals.length === 0) return;
+    if (category) {
+      void warmMealListOffline(category, meals);
+      return;
+    }
+    // Search / landing thumbs (landing categories are warmed inside queryFn)
+    void warmMealListOffline(null, meals);
+  }, [mealsQuery.isSuccess, meals, category]);
 
   function selectCategory(name: string) {
     const next = new URLSearchParams();

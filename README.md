@@ -7,7 +7,8 @@ Browse recipes from [TheMealDB](https://www.themealdb.com/) with a React + Vite 
 - Landing page highlights **Vegetarian** and **Vegan** recipes from TheMealDB
 - Search meals by name and browse categories
 - Recipe detail view (ingredients, instructions, tags, YouTube)
-- Favorite / unfavorite with **IndexedDB** persistence (works offline)
+- Favorite / unfavorite with **IndexedDB** persistence (full recipe details work offline)
+- When you favorite a recipe, the app also caches its image plus any category lists you have already loaded (and their images) for offline browsing
 - PWA: installable, service worker, offline fallback page, offline toast
 - Skeleton loaders, empty states, error boundary, theme toggle
 - Client never talks to TheMealDB directly — only `/api/*`
@@ -19,7 +20,7 @@ Browse recipes from [TheMealDB](https://www.themealdb.com/) with a React + Vite 
 | Client | React 18, Vite, TypeScript, Tailwind CSS, shadcn/ui-style components, TanStack Query, React Router, Sonner, `idb` |
 | Server | Node.js, Express, TypeScript, Helmet, CORS, compression |
 | Data | TheMealDB v1 (proxied) |
-| Offline | Manual service worker + IndexedDB favorites |
+| Offline | Manual service worker + IndexedDB favorites + category snapshots + Cache Storage images |
 
 ## Project structure
 

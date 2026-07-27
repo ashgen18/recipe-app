@@ -7,9 +7,10 @@
  * - Stale-While-Revalidate: images + /api/categories
  * - Network-First (cache fallback): /api/meal/*, /api/search, /api/filter
  * - Navigation: network, then cache, then /offline.html
+ * - Message CACHE_URLS: app asks SW to warm-cache favorite/category assets
  */
 
-const CACHE_VERSION = "recipes-pwa-v2";
+const CACHE_VERSION = "recipes-pwa-v3";
 const PRECACHE = `${CACHE_VERSION}-precache`;
 const RUNTIME = `${CACHE_VERSION}-runtime`;
 
@@ -54,7 +55,8 @@ self.addEventListener("activate", (event) => {
 function isImageRequest(request, url) {
   return (
     request.destination === "image" ||
-    /\.(?:png|jpg|jpeg|gif|webp|svg)(?:\?|$)/i.test(url.pathname)
+    /\.(?:png|jpg|jpeg|gif|webp|svg)(?:\?|$)/i.test(url.pathname) ||
+    url.hostname.includes("themealdb.com")
   );
 }
 
@@ -133,6 +135,40 @@ async function handleNavigation(request) {
     );
   }
 }
+
+/** App-driven warm cache for favorite images, meal APIs, and category lists. */
+async function cacheUrlsFromClient(urls) {
+  const cache = await caches.open(RUNTIME);
+  await Promise.all(
+    (urls || []).map(async (url) => {
+      if (!url) return;
+      try {
+        const existing = await cache.match(url);
+        if (existing) return;
+        const response = await fetch(url, {
+          mode: "cors",
+          credentials: "omit",
+        });
+        if (response && response.ok) {
+          await cache.put(url, response.clone());
+        }
+      } catch {
+        // ignore individual failures
+      }
+    })
+  );
+}
+
+self.addEventListener("message", (event) => {
+  const data = event.data;
+  if (!data || typeof data !== "object") return;
+  if (data.type === "CACHE_URLS" && Array.isArray(data.urls)) {
+    event.waitUntil(cacheUrlsFromClient(data.urls));
+  }
+  if (data.type === "SKIP_WAITING") {
+    self.skipWaiting();
+  }
+});
 
 self.addEventListener("fetch", (event) => {
   const { request } = event;
