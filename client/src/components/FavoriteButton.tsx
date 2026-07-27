@@ -8,6 +8,7 @@ import {
   removeFavorite,
   saveFavorite,
 } from "@/features/favorites/db";
+import { persistFavoriteForOffline } from "@/lib/offlineCache";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -72,8 +73,14 @@ export function FavoriteButton({
       } else {
         const full = await resolveFullMeal();
         await saveFavorite(full);
+        try {
+          // Warm Cache Storage: recipe JSON + favorite image (awaited), category lists/images (background)
+          await persistFavoriteForOffline(full);
+        } catch {
+          /* IndexedDB favorite still has full recipe text for offline details */
+        }
         setActive(true);
-        toast.success("Saved to favorites");
+        toast.success("Saved to favorites — available offline");
         window.dispatchEvent(new CustomEvent("favorites:changed"));
       }
     } catch (err) {

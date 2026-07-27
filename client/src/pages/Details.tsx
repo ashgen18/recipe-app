@@ -15,13 +15,19 @@ export function Details() {
     queryKey: ["meal", id],
     enabled: Boolean(id),
     queryFn: async () => {
+      // Prefer IndexedDB immediately when offline so details render without waiting on network errors.
+      if (!navigator.onLine) {
+        const fav = await getFavorite(id);
+        if (fav) return fav;
+      }
+
       try {
         const data = await getMealById(id);
         const meal = data.meals?.[0];
         if (meal) return meal;
         throw new Error("Recipe not found");
       } catch (err) {
-        // Offline fallback: serve from IndexedDB favorites if present
+        // Offline / API failure fallback: serve from IndexedDB favorites if present
         const fav = await getFavorite(id);
         if (fav) return fav;
         throw err;
