@@ -1,0 +1,27 @@
+{
+  "name": "recipe-app",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "A full-stack recipe manager: browse, add, and view cooking recipes.",
+  "workspaces": [
+    "server",
+    "client"
+  ],
+  "scripts": {
+    "dev": "concurrently -n server,client -c blue,magenta \"npm:dev:server\" \"npm:dev:client\"",
+    "dev:server": "npm --workspace server run dev",
+    "dev:client": "npm --workspace client run dev",
+    "build": "npm --workspace server run build && npm --workspace client run build",
+    "lint": "eslint .",
+    "test": "npm --workspace server run test && npm --workspace client run test"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.9.0",
+    "concurrently": "^9.0.0",
+    "eslint": "^9.9.0",
+    "globals": "^15.9.0",
+    "typescript": "^5.5.4",
+    "typescript-eslint": "^8.2.0"
+  }
+}
