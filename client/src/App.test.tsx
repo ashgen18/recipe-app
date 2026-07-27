@@ -46,4 +46,17 @@ describe("App", () => {
       expect(screen.getByText("Sample Soup")).toBeInTheDocument();
     });
   });
+
+  it("exposes mobile primary navigation tabs", async () => {
+    render(<App />);
+    const nav = screen.getByRole("navigation", { name: /primary/i });
+    expect(nav).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /^browse$/i }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^add$/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /^details$/i }),
+    ).toBeInTheDocument();
+  });
 });

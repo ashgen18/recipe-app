@@ -16,6 +16,8 @@ const EMPTY_FORM = {
   servings: "2",
 };
 
+type MobileTab = "browse" | "add" | "details";
+
 function toLines(value: string): string[] {
   return value
     .split("\n")
@@ -29,6 +31,7 @@ export function App() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [mobileTab, setMobileTab] = useState<MobileTab>("browse");
 
   async function refresh() {
     try {
@@ -51,6 +54,11 @@ export function App() {
     [recipes, selectedId],
   );
 
+  function selectRecipe(id: string) {
+    setSelectedId(id);
+    setMobileTab("details");
+  }
+
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     const payload: NewRecipeInput = {
@@ -71,6 +79,7 @@ export function App() {
       setError(null);
       await refresh();
       setSelectedId(created.id);
+      setMobileTab("details");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to save recipe.");
     }
@@ -81,6 +90,7 @@ export function App() {
       await deleteRecipe(id);
       if (selectedId === id) {
         setSelectedId(null);
+        setMobileTab("browse");
       }
       await refresh();
     } catch (err) {
@@ -91,15 +101,26 @@ export function App() {
   return (
     <div className="app">
       <header className="app__header">
-        <h1>🍳 Recipe App</h1>
+        <h1>Recipe App</h1>
         <p>Save, browse, and revisit your favorite recipes.</p>
       </header>
 
-      {error && <div className="banner banner--error">{error}</div>}
+      {error && (
+        <div className="banner banner--error" role="alert">
+          {error}
+        </div>
+      )}
 
       <main className="layout">
-        <section className="panel">
-          <h2>Add a recipe</h2>
+        <section
+          className={
+            mobileTab === "add"
+              ? "panel panel--add is-active"
+              : "panel panel--add"
+          }
+          aria-labelledby="add-heading"
+        >
+          <h2 id="add-heading">Add a recipe</h2>
           <form className="form" onSubmit={handleSubmit}>
             <label>
               Title
@@ -107,6 +128,8 @@ export function App() {
                 type="text"
                 value={form.title}
                 placeholder="Grandma's Apple Pie"
+                autoComplete="off"
+                enterKeyHint="next"
                 onChange={(e) => setForm({ ...form, title: e.target.value })}
               />
             </label>
@@ -126,6 +149,7 @@ export function App() {
                 Minutes
                 <input
                   type="number"
+                  inputMode="numeric"
                   min={0}
                   value={form.minutes}
                   onChange={(e) =>
@@ -137,6 +161,7 @@ export function App() {
                 Servings
                 <input
                   type="number"
+                  inputMode="numeric"
                   min={1}
                   value={form.servings}
                   onChange={(e) =>
@@ -171,12 +196,28 @@ export function App() {
           </form>
         </section>
 
-        <section className="panel">
-          <h2>Recipes ({recipes.length})</h2>
+        <section
+          className={
+            mobileTab === "browse"
+              ? "panel panel--browse is-active"
+              : "panel panel--browse"
+          }
+          aria-labelledby="browse-heading"
+        >
+          <h2 id="browse-heading">Recipes ({recipes.length})</h2>
           {loading ? (
             <p>Loading…</p>
           ) : recipes.length === 0 ? (
-            <p className="muted">No recipes yet. Add your first one!</p>
+            <div className="empty-state">
+              <p className="muted">No recipes yet. Add your first one!</p>
+              <button
+                type="button"
+                className="button button--secondary mobile-only"
+                onClick={() => setMobileTab("add")}
+              >
+                Add a recipe
+              </button>
+            </div>
           ) : (
             <ul className="recipe-list">
               {recipes.map((recipe) => (
@@ -191,7 +232,7 @@ export function App() {
                   <button
                     type="button"
                     className="recipe-list__select"
-                    onClick={() => setSelectedId(recipe.id)}
+                    onClick={() => selectRecipe(recipe.id)}
                   >
                     <strong>{recipe.title}</strong>
                     <span className="muted">
@@ -204,7 +245,7 @@ export function App() {
                     aria-label={`Delete ${recipe.title}`}
                     onClick={() => handleDelete(recipe.id)}
                   >
-                    ✕
+                    Delete
                   </button>
                 </li>
               ))}
@@ -212,8 +253,26 @@ export function App() {
           )}
         </section>
 
-        <section className="panel panel--detail">
-          <h2>Details</h2>
+        <section
+          className={
+            mobileTab === "details"
+              ? "panel panel--detail is-active"
+              : "panel panel--detail"
+          }
+          aria-labelledby="details-heading"
+        >
+          <div className="panel__heading-row">
+            <h2 id="details-heading">Details</h2>
+            {selected && (
+              <button
+                type="button"
+                className="button button--ghost mobile-only"
+                onClick={() => setMobileTab("browse")}
+              >
+                Back to list
+              </button>
+            )}
+          </div>
           {selected ? (
             <article className="detail">
               <h3>{selected.title}</h3>
@@ -243,10 +302,58 @@ export function App() {
               )}
             </article>
           ) : (
-            <p className="muted">Select a recipe to see the full details.</p>
+            <div className="empty-state">
+              <p className="muted">Select a recipe to see the full details.</p>
+              <button
+                type="button"
+                className="button button--secondary mobile-only"
+                onClick={() => setMobileTab("browse")}
+              >
+                Browse recipes
+              </button>
+            </div>
           )}
         </section>
       </main>
+
+      <nav className="mobile-nav" aria-label="Primary">
+        <button
+          type="button"
+          className={
+            mobileTab === "browse"
+              ? "mobile-nav__item is-active"
+              : "mobile-nav__item"
+          }
+          aria-current={mobileTab === "browse" ? "page" : undefined}
+          onClick={() => setMobileTab("browse")}
+        >
+          Browse
+        </button>
+        <button
+          type="button"
+          className={
+            mobileTab === "add"
+              ? "mobile-nav__item is-active"
+              : "mobile-nav__item"
+          }
+          aria-current={mobileTab === "add" ? "page" : undefined}
+          onClick={() => setMobileTab("add")}
+        >
+          Add
+        </button>
+        <button
+          type="button"
+          className={
+            mobileTab === "details"
+              ? "mobile-nav__item is-active"
+              : "mobile-nav__item"
+          }
+          aria-current={mobileTab === "details" ? "page" : undefined}
+          onClick={() => setMobileTab("details")}
+        >
+          Details
+        </button>
+      </nav>
     </div>
   );
 }

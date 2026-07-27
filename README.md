@@ -17,6 +17,10 @@ npm run dev      # start API (:3001) and client (:5173)
 
 Then open http://localhost:5173.
 
+## Mobile layout
+
+On viewports ≤900px the three desktop panels collapse into a single-panel mobile shell with a fixed bottom tab bar (**Browse** / **Add** / **Details**). Selecting or saving a recipe opens **Details** automatically. Touch targets are at least ~44px, inputs use 16px text to avoid iOS zoom, and layout respects safe-area insets.
+
 ## Scripts (run from repo root)
 
 | Command | Description |
