@@ -277,9 +277,18 @@ textarea:focus {
 
 @media (max-width: 900px) {
   .app {
-    padding: max(0.85rem, var(--safe-top)) max(0.85rem, var(--safe-right))
+    max-width: none;
+    padding: max(0.75rem, var(--safe-top)) max(0.75rem, var(--safe-right))
       calc(var(--mobile-nav-height) + var(--safe-bottom) + 0.75rem)
-      max(0.85rem, var(--safe-left));
+      max(0.75rem, var(--safe-left));
+  }
+
+  .app__header {
+    margin-bottom: 0.25rem;
+  }
+
+  .app__header p {
+    margin-bottom: 0.75rem;
   }
 
   .layout {
@@ -289,8 +298,11 @@ textarea:focus {
 
   .panel {
     display: none;
-    border-radius: 14px;
-    padding: 1.1rem;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    background: transparent;
+    padding: 0;
   }
 
   .panel.is-active {
@@ -303,10 +315,19 @@ textarea:focus {
     justify-content: center;
   }
 
+  .recipe-list__item {
+    background: var(--panel);
+  }
+
+  .form label {
+    color: var(--text);
+  }
+
   .button--primary {
     position: sticky;
     bottom: calc(var(--mobile-nav-height) + var(--safe-bottom) + 0.5rem);
     z-index: 1;
+    box-shadow: 0 4px 16px rgba(232, 89, 12, 0.28);
   }
 
   .mobile-nav {
@@ -317,9 +338,11 @@ textarea:focus {
     right: 0;
     bottom: 0;
     z-index: 50;
+    width: 100%;
     height: calc(var(--mobile-nav-height) + var(--safe-bottom));
-    padding: 0.35rem 0.5rem var(--safe-bottom);
-    background: rgba(255, 255, 255, 0.96);
+    padding: 0.35rem max(0.5rem, var(--safe-left)) var(--safe-bottom)
+      max(0.5rem, var(--safe-right));
+    background: rgba(255, 255, 255, 0.97);
     border-top: 1px solid var(--border);
     backdrop-filter: blur(10px);
   }
@@ -330,10 +353,10 @@ textarea:focus {
     background: transparent;
     color: var(--muted);
     font: inherit;
-    font-size: 0.85rem;
+    font-size: 0.9rem;
     font-weight: 600;
     border-radius: 10px;
-    min-height: 2.75rem;
+    min-height: 2.85rem;
     cursor: pointer;
     touch-action: manipulation;
   }
