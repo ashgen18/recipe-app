@@ -31,9 +31,17 @@ export function Header() {
         <div className="flex items-center justify-between gap-3">
           <Link
             to="/"
-            className="font-display text-2xl font-bold tracking-tight text-primary"
+            className="flex items-center gap-2.5 font-display text-2xl font-bold tracking-tight text-primary"
           >
-            Recipes
+            <img
+              src="/favicon.svg"
+              alt=""
+              width={36}
+              height={36}
+              className="h-9 w-9 rounded-lg shadow-sm"
+              decoding="async"
+            />
+            <span>Recipes</span>
           </Link>
           <nav aria-label="Primary" className="flex items-center gap-1 sm:hidden">
             <NavLink to="/" className={navClass} end>
