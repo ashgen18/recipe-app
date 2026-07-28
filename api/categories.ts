@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { proxyMealDb, sendJson } from "../_lib/mealdb";
+import { proxyMealDb, sendJson } from "./_lib/mealdb";
 
 const CATEGORIES_TTL_MS = 10 * 60 * 1000;
 
