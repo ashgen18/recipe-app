@@ -28,6 +28,15 @@ Browse recipes from [TheMealDB](https://www.themealdb.com/) with a React + Vite 
 /
 ├── README.md
 ├── package.json
+├── vercel.json
+├── api/                    # Vercel Edge functions (/api/*)
+│   ├── _lib/mealdb.ts
+│   ├── health.ts
+│   ├── search.ts
+│   ├── categories.ts
+│   ├── filter.ts
+│   ├── random.ts
+│   └── meal/[id].ts
 ├── server/
 │   ├── .env.example
 │   ├── package.json
@@ -39,6 +48,7 @@ Browse recipes from [TheMealDB](https://www.themealdb.com/) with a React + Vite 
     ├── index.html
     ├── package.json
     ├── vite.config.ts
+    ├── vercel.json         # client-only deploy (optional)
     ├── tailwind.config.cjs
     ├── postcss.config.cjs
     ├── public/
@@ -53,7 +63,7 @@ Browse recipes from [TheMealDB](https://www.themealdb.com/) with a React + Vite 
         ├── components/
         ├── pages/{Home,Details,Favorites}.tsx
         ├── features/favorites/db.ts
-        ├── lib/{api,queryClient,utils}.ts
+        ├── lib/{api,queryClient,utils,offlineCache}.ts
         └── styles/globals.css
 ```
 
@@ -82,12 +92,14 @@ Vite serves on `http://localhost:5173` and proxies `/api/*` → `http://localhos
 
 ### Root helper scripts
 
-From the repo root (after installing both packages):
+Yes — a root `package.json` is intentional. It lets you install and run both sides with one command:
 
 ```bash
-npm run dev:server
-npm run dev:client
+npm run install:all
+npm run dev          # Express :5174 + Vite :5173 via concurrently
 ```
+
+Other helpers: `dev:server`, `dev:client`, `build`, `build:client`, `start`.
 
 ## Environment variables
 
@@ -163,11 +175,32 @@ To change strategies, edit `client/src/sw.js` (and sync to `public/sw.js`), then
 
 ## Deploy (live public URL)
 
-### Recommended: one Render service (UI + API together)
+### Recommended for Vercel: one project (SPA + Edge API)
+
+Root `vercel.json` builds the Vite client and serves MealDB through Edge functions under `/api/*` (same-origin, no `VITE_API_BASE` needed).
+
+1. Push this branch (or merge to `main`).
+2. [Vercel Dashboard](https://vercel.com/new) → Import the `ashgen18/recipe-app` repo.
+3. **Leave Root Directory empty** (deploy from the repo root — do not set it to `client`).
+4. Framework Preset: **Other**. Build settings are read from `vercel.json`.
+5. Optional env vars:
+
+| Variable | Value |
+| --- | --- |
+| `MEALDB_API_BASE` | `https://www.themealdb.com/api/json/v1` |
+| `MEALDB_API_KEY` | `1` (or your key) |
+
+6. Deploy, then open the `*.vercel.app` URL.
+
+API routes on Vercel: `/api/health`, `/api/search`, `/api/meal/:id`, `/api/categories`, `/api/filter`, `/api/random`.
+
+> `client/vercel.json` is only for a **client-only** deploy (Root Directory = `client`) with a separate API host and `VITE_API_BASE`.
+
+### Alternative: one Render service (UI + Express together)
 
 This repo includes `render.yaml`. Production Express serves `client/dist`, so you get **one shareable URL**.
 
-1. Push/merge this branch (or deploy from `cursor/recipes-pwa-6a65`).
+1. Push/merge this branch.
 2. Go to [Render Dashboard](https://dashboard.render.com/) → **New** → **Blueprint**.
 3. Connect the `ashgen18/recipe-app` GitHub repo.
 4. Apply the Blueprint (`recipe-app` web service, free plan).
@@ -191,7 +224,7 @@ Notes:
 - **API on Render**, **client on Vercel/Netlify**
   - Client env: `VITE_API_BASE=https://YOUR-SERVICE.onrender.com/api`
   - Server env: `CORS_ORIGINS=https://your-client.vercel.app`
-  - Config stubs: `client/vercel.json`, `netlify.toml`
+  - Client-only config: `client/vercel.json`, `netlify.toml`
 
 ### Local production smoke test
 
@@ -213,7 +246,7 @@ NODE_ENV=production npm start
 - [ ] `cd server && cp .env.example .env && npm i && npm run dev`
 - [ ] `cd client && npm i && npm run dev`
 - [ ] Confirm search, categories, detail, favorites
-- [ ] Deploy via Render Blueprint for a public URL
+- [ ] Deploy via Vercel (repo root + `vercel.json`) or Render Blueprint for a public URL
 - [ ] Replace placeholder icons in `client/public/icons/` with branded assets
 - [ ] Optionally add more shadcn components via CLI
 - [ ] Bump SW `CACHE_VERSION` after deploy asset changes
