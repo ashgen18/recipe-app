@@ -1,19 +1,17 @@
-import { jsonResponse, methodNotAllowed, proxyMealDb } from "../../_lib/mealdb";
+import type { VercelRequest, VercelResponse } from "@vercel/node";
+import { proxyMealDb, sendJson } from "../../_lib/mealdb";
 
-export const config = { runtime: "edge" };
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  if (req.method !== "GET") {
+    res.status(405).json({ error: "Method not allowed" });
+    return;
+  }
 
-/**
- * Vercel passes dynamic segments via request URL for Edge functions.
- * Path shape: /api/meal/:id
- */
-export default async function handler(request: Request): Promise<Response> {
-  if (request.method !== "GET") return methodNotAllowed();
-
-  const { pathname } = new URL(request.url);
-  const match = pathname.match(/\/api\/meal\/([^/]+)\/?$/);
-  const id = match?.[1] ? decodeURIComponent(match[1]) : "";
-  if (!id) {
-    return Response.json({ error: "Meal id is required" }, { status: 400 });
+  const raw = req.query.id;
+  const id = Array.isArray(raw) ? raw[0] : raw;
+  if (!id || typeof id !== "string") {
+    res.status(400).json({ error: "Meal id is required" });
+    return;
   }
 
   const result = await proxyMealDb(
@@ -21,5 +19,5 @@ export default async function handler(request: Request): Promise<Response> {
     { i: id },
     { cacheControl: "public, max-age=300" }
   );
-  return jsonResponse(result);
+  sendJson(res, result);
 }
