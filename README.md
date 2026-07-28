@@ -195,13 +195,19 @@ Root `vercel.json` builds the Vite client and serves MealDB through Edge functio
 
 API routes on Vercel: `/api/health`, `/api/search`, `/api/meal/:id`, `/api/categories`, `/api/filter`, `/api/random`.
 
-#### Troubleshooting: `Missing script: "install:all"`
+#### Troubleshooting: `Command "npm run install:all" exited with 1`
 
-That means the build is not using the repo-root `package.json` (often **Root Directory = `client`**, or a dashboard Install Command override). Fix:
+Vercel is still using an **old Install Command override** from Project Settings (or Root Directory is `client`). The repo no longer needs `install:all` for Vercel.
 
-1. Project Settings → General → **Root Directory**: clear it (repo root).
-2. Settings → Build & Development → reset Install Command / Build Command / Output Directory to defaults (use `vercel.json`).
-3. Redeploy.
+Do this in the Vercel dashboard, then redeploy **main**:
+
+1. Open the project → **Settings → General**
+2. **Root Directory**: clear/empty (must be the repo root so `/api` deploys)
+3. **Settings → Build & Development Settings**
+4. Set **Install Command**, **Build Command**, and **Output Directory** to **Override: OFF** (use `vercel.json`)
+5. **Deployments → … on latest main → Redeploy** (without using an old failed deployment’s cached settings if prompted)
+
+If Override stays on by mistake, `install:all` / `build:client` now exist on both root and `client` package.json as a safety net — but Root Directory must still be empty for the Edge `/api` routes.
 
 > `client/vercel.json` is only for a **client-only** deploy (Root Directory = `client`) with a separate API host and `VITE_API_BASE`.
 
