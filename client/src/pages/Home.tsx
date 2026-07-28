@@ -7,7 +7,6 @@ import {
   getCategories,
   getRandomMeal,
   searchMeals,
-  type Category,
   type MealSummary,
 } from "@/lib/api";
 import {
@@ -20,7 +19,14 @@ import { Button } from "@/components/ui/button";
 import { RecipeCard, RecipeCardSkeleton } from "@/components/RecipeCard";
 import { Skeleton } from "@/components/ui/skeleton";
 
-const LANDING_CATEGORIES = ["Vegetarian", "Vegan"] as const;
+const DEFAULT_BROWSE_CATEGORIES = [
+  "Chicken",
+  "Lamb",
+  "Miscellaneous",
+  "Pork",
+  "Seafood",
+  "Beef",
+] as const;
 
 function mergeMeals(...lists: (MealSummary[] | null | undefined)[]): MealSummary[] {
   const merged: MealSummary[] = [];
@@ -34,15 +40,6 @@ function mergeMeals(...lists: (MealSummary[] | null | undefined)[]): MealSummary
   return merged;
 }
 
-function prioritizePlantBased(categories: Category[]): Category[] {
-  const preferred = new Set<string>(LANDING_CATEGORIES);
-  const featured = LANDING_CATEGORIES.map((name) =>
-    categories.find((c) => c.strCategory === name)
-  ).filter((c): c is Category => Boolean(c));
-  const rest = categories.filter((c) => !preferred.has(c.strCategory));
-  return [...featured, ...rest];
-}
-
 export function Home() {
   const [params, setParams] = useSearchParams();
   const query = params.get("q")?.trim() ?? "";
@@ -54,7 +51,7 @@ export function Home() {
   });
 
   const orderedCategories = useMemo(
-    () => prioritizePlantBased(categoriesQuery.data?.categories ?? []),
+    () => categoriesQuery.data?.categories ?? [],
     [categoriesQuery.data]
   );
 
@@ -68,13 +65,15 @@ export function Home() {
           void warmMealListOffline(category, data.meals ?? []);
           return data;
         }
-        // Default landing: Vegetarian + Vegan recipes
-        const [vegetarian, vegan] = await Promise.all(
-          LANDING_CATEGORIES.map((name) => filterByCategory(name))
+        // Default browse view: show a broad recipe grid, matching the local landing page.
+        const defaultLists = await Promise.all(
+          DEFAULT_BROWSE_CATEGORIES.map(async (name) => {
+            const data = await filterByCategory(name);
+            void warmMealListOffline(name, data.meals ?? []);
+            return data.meals;
+          })
         );
-        void warmMealListOffline("Vegetarian", vegetarian.meals ?? []);
-        void warmMealListOffline("Vegan", vegan.meals ?? []);
-        return { meals: mergeMeals(vegetarian.meals, vegan.meals) };
+        return { meals: mergeMeals(...defaultLists) };
       } catch (err) {
         // Offline: serve category snapshots saved while browsing / favoriting
         if (query) throw err;
@@ -84,10 +83,6 @@ export function Home() {
           throw err;
         }
         const snaps = await getAllCategorySnapshots();
-        const plant = LANDING_CATEGORIES.flatMap(
-          (name) => snaps.find((s) => s.category === name)?.meals ?? []
-        );
-        if (plant.length) return { meals: mergeMeals(plant) };
         const any = snaps.flatMap((s) => s.meals);
         if (any.length) return { meals: mergeMeals(any) };
         throw err;
@@ -104,7 +99,7 @@ export function Home() {
       void warmMealListOffline(category, meals);
       return;
     }
-    // Search / landing thumbs (landing categories are warmed inside queryFn)
+    // Search / default browse thumbs (default categories are warmed inside queryFn)
     void warmMealListOffline(null, meals);
   }, [mealsQuery.isSuccess, meals, category]);
 
@@ -139,16 +134,10 @@ export function Home() {
               id="browse-heading"
               className="font-display text-3xl font-bold tracking-tight sm:text-4xl"
             >
-              {query
-                ? `Results for “${query}”`
-                : category
-                  ? category
-                  : "Vegetarian & Vegan"}
+              {query ? `Results for “${query}”` : category ? category : "Discover recipes"}
             </h1>
             <p className="mt-1 max-w-2xl text-muted-foreground">
-              {query || category
-                ? "Search by name or browse categories. Favorites sync to this device and work offline."
-                : "Plant-based recipes to start with — pick Vegetarian or Vegan, or browse every category."}
+              Search by name or browse categories. Favorites sync to this device and work offline.
             </p>
           </div>
           <Button type="button" variant="secondary" onClick={surpriseMe}>
@@ -178,7 +167,7 @@ export function Home() {
             className="rounded-md focus-visible:outline-none"
           >
             <Badge variant={!query && !category ? "default" : "outline"}>
-              Vegetarian & Vegan
+              All
             </Badge>
           </button>
           {orderedCategories.map((cat) => (
