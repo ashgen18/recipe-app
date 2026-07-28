@@ -211,11 +211,17 @@ If Override stays on by mistake, `install:all` / `build:client` now exist on bot
 
 #### Troubleshooting: `Unexpected token '<', "<!doctype "... is not valid JSON`
 
-The UI loaded, but `/api/*` returned **HTML** (`index.html`) instead of JSON. That happens when the SPA catch-all rewrite wins over the API, or when Root Directory is `client` so the root `/api` functions are not deployed.
+The UI loaded, but `/api/*` returned **HTML** (`index.html`) instead of JSON. The browser then fails parsing categories/recipes.
 
-1. **Settings → General → Root Directory**: must be **empty** (repo root)
-2. Redeploy latest `main`
-3. Verify in a browser/tab: `https://YOUR-APP.vercel.app/api/health` should show `{"ok":true,...}` — not an HTML page
+Typical causes on this project:
+
+1. **Static-only deploy** — `outputDirectory: "client/dist"` can publish only the Vite build and skip root `/api` serverless functions. The build now copies `client/dist` → `public/` and leaves `/api` at the repo root so both ship together.
+2. **Root Directory = `client`** in the Vercel dashboard — then root `/api` is never uploaded. Set **Root Directory** to empty (repo root).
+
+After redeploying, verify:
+
+`https://YOUR-APP.vercel.app/api/health` → `{"ok":true,"service":"recipe-app-vercel"}`  
+If you still see an HTML page, Root Directory is still wrong or an old deployment is serving.
 
 #### Troubleshooting: manifest CORS / `vercel.com/sso-api` redirects
 
