@@ -183,16 +183,25 @@ Root `vercel.json` builds the Vite client and serves MealDB through Edge functio
 2. [Vercel Dashboard](https://vercel.com/new) → Import the `ashgen18/recipe-app` repo.
 3. **Leave Root Directory empty** (deploy from the repo root — do not set it to `client`).
 4. Framework Preset: **Other**. Build settings are read from `vercel.json`.
-5. Optional env vars:
+5. In **Settings → Build & Development Settings**, clear any overridden Install / Build / Output values so `vercel.json` wins (Install should effectively be `npm install --prefix client`).
+6. Optional env vars:
 
 | Variable | Value |
 | --- | --- |
 | `MEALDB_API_BASE` | `https://www.themealdb.com/api/json/v1` |
 | `MEALDB_API_KEY` | `1` (or your key) |
 
-6. Deploy, then open the `*.vercel.app` URL.
+7. Deploy, then open the `*.vercel.app` URL.
 
 API routes on Vercel: `/api/health`, `/api/search`, `/api/meal/:id`, `/api/categories`, `/api/filter`, `/api/random`.
+
+#### Troubleshooting: `Missing script: "install:all"`
+
+That means the build is not using the repo-root `package.json` (often **Root Directory = `client`**, or a dashboard Install Command override). Fix:
+
+1. Project Settings → General → **Root Directory**: clear it (repo root).
+2. Settings → Build & Development → reset Install Command / Build Command / Output Directory to defaults (use `vercel.json`).
+3. Redeploy.
 
 > `client/vercel.json` is only for a **client-only** deploy (Root Directory = `client`) with a separate API host and `VITE_API_BASE`.
 
