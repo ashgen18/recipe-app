@@ -85,12 +85,14 @@ export function Details() {
 
   return (
     <article className="space-y-8">
-      <div className="overflow-hidden rounded-xl border bg-card">
-        <img
-          src={meal.strMealThumb}
-          alt={`Photo of ${meal.strMeal}`}
-          className="max-h-[420px] w-full object-cover"
-        />
+      <div className="max-w-xl overflow-hidden rounded-xl border bg-card">
+        <div className="aspect-[4/3] bg-muted">
+          <img
+            src={meal.strMealThumb}
+            alt={`Photo of ${meal.strMeal}`}
+            className="h-full w-full object-cover"
+          />
+        </div>
       </div>
 
       <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">

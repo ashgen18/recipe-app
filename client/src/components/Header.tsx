@@ -43,10 +43,6 @@ export function Header() {
         : "text-foreground/80 hover:bg-secondary"
     );
 
-  const actionClass = cn(
-    "rounded-md px-3 py-2 text-sm font-medium transition-colors text-foreground/80 hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-60"
-  );
-
   return (
     <header className="sticky top-0 z-40 border-b bg-background/85 backdrop-blur-md">
       <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:gap-4">
@@ -69,14 +65,13 @@ export function Header() {
             <NavLink to="/" className={navClass} end>
               Browse
             </NavLink>
-            <button
+            <Button
               type="button"
               onClick={openRandomRecipe}
               disabled={isRandomLoading}
-              className={actionClass}
             >
               Random
-            </button>
+            </Button>
             <NavLink to="/favorites" className={navClass}>
               Favorites
             </NavLink>
@@ -117,14 +112,13 @@ export function Header() {
           <NavLink to="/" className={navClass} end>
             Browse
           </NavLink>
-          <button
+          <Button
             type="button"
             onClick={openRandomRecipe}
             disabled={isRandomLoading}
-            className={actionClass}
           >
             Random
-          </button>
+          </Button>
           <NavLink to="/favorites" className={navClass}>
             <Heart className="mr-1 h-4 w-4" aria-hidden="true" />
             Favorites
