@@ -1,20 +1,38 @@
 import { useState, type FormEvent } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { Heart, Search } from "lucide-react";
+import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { getRandomMeal } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
 export function Header() {
   const navigate = useNavigate();
   const [q, setQ] = useState("");
+  const [isRandomLoading, setIsRandomLoading] = useState(false);
 
   function onSearch(e: FormEvent) {
     e.preventDefault();
     const trimmed = q.trim();
     if (!trimmed) return;
     navigate(`/?q=${encodeURIComponent(trimmed)}`);
+  }
+
+  async function openRandomRecipe() {
+    if (isRandomLoading) return;
+    setIsRandomLoading(true);
+    try {
+      const data = await getRandomMeal();
+      const meal = data.meals?.[0];
+      if (!meal) throw new Error("Could not load a random recipe");
+      navigate(`/meal/${meal.idMeal}`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not load a random recipe");
+    } finally {
+      setIsRandomLoading(false);
+    }
   }
 
   const navClass = ({ isActive }: { isActive: boolean }) =>
@@ -47,6 +65,13 @@ export function Header() {
             <NavLink to="/" className={navClass} end>
               Browse
             </NavLink>
+            <Button
+              type="button"
+              onClick={openRandomRecipe}
+              disabled={isRandomLoading}
+            >
+              Random
+            </Button>
             <NavLink to="/favorites" className={navClass}>
               Favorites
             </NavLink>
@@ -87,6 +112,13 @@ export function Header() {
           <NavLink to="/" className={navClass} end>
             Browse
           </NavLink>
+          <Button
+            type="button"
+            onClick={openRandomRecipe}
+            disabled={isRandomLoading}
+          >
+            Random
+          </Button>
           <NavLink to="/favorites" className={navClass}>
             <Heart className="mr-1 h-4 w-4" aria-hidden="true" />
             Favorites
