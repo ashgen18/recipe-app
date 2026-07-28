@@ -16,6 +16,9 @@
     "start": "npm run start --prefix server",
     "install:all": "npm i --prefix server && npm i --prefix client"
   },
+  "dependencies": {
+    "@vercel/node": "^5.3.6"
+  },
   "devDependencies": {
     "concurrently": "^9.2.0"
   }

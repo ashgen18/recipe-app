@@ -1,21 +1,20 @@
-import { jsonResponse, methodNotAllowed, proxyMealDb } from "../_lib/mealdb";
+import type { VercelRequest, VercelResponse } from "@vercel/node";
+import { proxyMealDb, sendJson } from "../_lib/mealdb";
 
-export const config = { runtime: "edge" };
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  if (req.method !== "GET") {
+    res.status(405).json({ error: "Method not allowed" });
+    return;
+  }
 
-export default async function handler(request: Request): Promise<Response> {
-  if (request.method !== "GET") return methodNotAllowed();
-
-  const { searchParams } = new URL(request.url);
-  const s = (searchParams.get("s") ?? "").trim();
+  const s = typeof req.query.s === "string" ? req.query.s.trim() : "";
   if (!s) {
-    return Response.json(
-      { error: 'Query parameter "s" is required' },
-      { status: 400 }
-    );
+    res.status(400).json({ error: 'Query parameter "s" is required' });
+    return;
   }
 
   const result = await proxyMealDb("search.php", { s }, {
     cacheControl: "public, max-age=120",
   });
-  return jsonResponse(result);
+  sendJson(res, result);
 }

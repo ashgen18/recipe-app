@@ -209,6 +209,14 @@ Do this in the Vercel dashboard, then redeploy **main**:
 
 If Override stays on by mistake, `install:all` / `build:client` now exist on both root and `client` package.json as a safety net — but Root Directory must still be empty for the Edge `/api` routes.
 
+#### Troubleshooting: `Unexpected token '<', "<!doctype "... is not valid JSON`
+
+The UI loaded, but `/api/*` returned **HTML** (`index.html`) instead of JSON. That happens when the SPA catch-all rewrite wins over the API, or when Root Directory is `client` so the root `/api` functions are not deployed.
+
+1. **Settings → General → Root Directory**: must be **empty** (repo root)
+2. Redeploy latest `main`
+3. Verify in a browser/tab: `https://YOUR-APP.vercel.app/api/health` should show `{"ok":true,...}` — not an HTML page
+
 #### Troubleshooting: manifest CORS / `vercel.com/sso-api` redirects
 
 If the browser console shows the PWA manifest blocked by CORS and the URL redirects to `https://vercel.com/sso-api?...`, **Vercel Deployment Protection** (SSO) is on. That gate also blocks `/api/*` for anonymous users.

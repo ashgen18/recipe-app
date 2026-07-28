@@ -1,8 +1,9 @@
-export const config = { runtime: "edge" };
+import type { VercelRequest, VercelResponse } from "@vercel/node";
 
-export default function handler(request: Request): Response {
-  if (request.method !== "GET") {
-    return Response.json({ error: "Method not allowed" }, { status: 405 });
+export default function handler(req: VercelRequest, res: VercelResponse) {
+  if (req.method !== "GET") {
+    res.status(405).json({ error: "Method not allowed" });
+    return;
   }
-  return Response.json({ ok: true, service: "recipe-app-vercel" });
+  res.status(200).json({ ok: true, service: "recipe-app-vercel" });
 }

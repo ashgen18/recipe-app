@@ -1,5 +1,5 @@
 /**
- * Shared TheMealDB proxy helpers for Vercel serverless `/api/*` routes.
+ * Shared TheMealDB proxy helpers for Vercel `/api/*` serverless functions.
  * Keeps MEALDB_API_KEY server-side only.
  */
 
@@ -99,22 +99,16 @@ export async function proxyMealDb(
   };
 }
 
-export function jsonResponse(result: MealDbResult): Response {
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-  };
+type VercelLikeResponse = {
+  status: (code: number) => VercelLikeResponse;
+  setHeader: (name: string, value: string) => void;
+  json: (body: unknown) => void;
+};
 
+export function sendJson(res: VercelLikeResponse, result: MealDbResult): void {
   if (result.ok) {
-    headers["X-Cache"] = result.cache;
-    headers["Cache-Control"] = result.cacheControl;
+    res.setHeader("X-Cache", result.cache);
+    res.setHeader("Cache-Control", result.cacheControl);
   }
-
-  return new Response(JSON.stringify(result.body), {
-    status: result.status,
-    headers,
-  });
-}
-
-export function methodNotAllowed(): Response {
-  return Response.json({ error: "Method not allowed" }, { status: 405 });
+  res.status(result.status).json(result.body);
 }
