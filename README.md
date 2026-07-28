@@ -209,6 +209,19 @@ Do this in the Vercel dashboard, then redeploy **main**:
 
 If Override stays on by mistake, `install:all` / `build:client` now exist on both root and `client` package.json as a safety net — but Root Directory must still be empty for the Edge `/api` routes.
 
+#### Troubleshooting: manifest CORS / `vercel.com/sso-api` redirects
+
+If the browser console shows the PWA manifest blocked by CORS and the URL redirects to `https://vercel.com/sso-api?...`, **Vercel Deployment Protection** (SSO) is on. That gate also blocks `/api/*` for anonymous users.
+
+Fix in the Vercel dashboard (not in code):
+
+1. Project → **Settings → Deployment Protection**
+2. For **Production**, set protection to **None** (disable Vercel Authentication)
+3. Keep protection on Preview deployments if you want
+4. Hard-refresh `https://your-app.vercel.app` (or open in a private window)
+
+After that, `/manifest.webmanifest` and `/api/health` should return `200` without an SSO redirect.
+
 > `client/vercel.json` is only for a **client-only** deploy (Root Directory = `client`) with a separate API host and `VITE_API_BASE`.
 
 ### Alternative: one Render service (UI + Express together)
