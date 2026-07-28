@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
+    "build:client": "npm run build",
+    "install:all": "npm install",
     "preview": "vite preview"
   },
   "dependencies": {
